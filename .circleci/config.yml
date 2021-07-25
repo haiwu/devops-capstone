@@ -56,7 +56,7 @@ jobs:
           node-type: 't2.micro'
           nodes: 2
           show-eksctl-command: true
-          zones: 'us-east-1a,us-east-1b,us-east-1c'
+          zones: 'us-east-1a,us-east-1b'
   test-cluster:
     executor: aws-eks/python3
     parameters:
@@ -114,7 +114,7 @@ workflows:
             - create-cluster
       - aws-eks/update-container-image:
           cluster-name: haiwu-helloworld-eks
-          container-image-updates: 'nginx-hello-world=nginx-hello-world:latest'
+          container-image-updates: 'haiwu-hello-world=haiwu/nginx-hello-world:latest'
           record: true
           requires:
             - create-deployment
