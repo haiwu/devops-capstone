@@ -74,7 +74,6 @@ jobs:
             kubectl get services
             kubectl get pods -l app=hello-world
             kubectl get deployments
-            kubectl set svc -n haiwu-nginx-hello-world-service
   create-deployment:
     executor: aws-eks/python3
     parameters:
@@ -107,15 +106,15 @@ workflows:
       - create-cluster:
           cluster-name: haiwu-helloworld-eks
           requires:
-            - publish-image       
-      - test-cluster:
-          cluster-name: haiwu-helloworld-eks
-          requires:
-            - create-cluster
+            - publish-image
       - create-deployment:
           cluster-name: haiwu-helloworld-eks
           requires:
-            - test-cluster
+            - create-cluster
+      - test-cluster:
+          cluster-name: haiwu-helloworld-eks
+          requires:
+            - create-deployment
       - aws-eks/update-container-image:
           cluster-name: haiwu-helloworld-eks
           container-image-updates: 'nginx-hello-world=nginx-hello-world:latest'
