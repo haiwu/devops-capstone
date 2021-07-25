@@ -92,6 +92,8 @@ workflows:
             - build
       - aws-eks/create-cluster:
           cluster-name: haiwu-helloworld-eks
+          requires:
+            - publish-image       
       - test-cluster:
           cluster-name: haiwu-helloworld-eks
           requires:
