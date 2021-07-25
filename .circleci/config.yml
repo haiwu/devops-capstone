@@ -110,7 +110,7 @@ workflows:
       - test-cluster:
           cluster-name: haiwu-helloworld-eks
           requires:
-            - aws-eks/create-cluster
+            - create-cluster
       - create-deployment:
           cluster-name: haiwu-helloworld-eks
           requires:
