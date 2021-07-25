@@ -73,7 +73,7 @@ jobs:
           command: |
             kubectl get services
             kubectl get pods -l app=hello-world
-            kubectl get deployments --name=haiwu-nginx-hello-world-deployment
+            kubectl get deployments
             kubectl set svc -n haiwu-nginx-hello-world-service
   create-deployment:
     executor: aws-eks/python3
