@@ -43,6 +43,19 @@ jobs:
             docker tag $IMAGE_NAME:latest $IMAGE_NAME:$IMAGE_TAG
             docker push $IMAGE_NAME:latest
             docker push $IMAGE_NAME:$IMAGE_TAG
+  create-cluster:
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        description: |
+          AWS EKS cluster name
+        type: string
+    steps:
+      - aws-eks/create-cluster:
+          cluster-name: << parameters.cluster-name >>
+          node-type: 't2.micro'
+          nodes: 2
+          show-eksctl-command: true
   test-cluster:
     executor: aws-eks/python3
     parameters:
@@ -90,11 +103,8 @@ workflows:
       - publish-image:
           requires:
             - build
-      - aws-eks/create-cluster:
+      - create-cluster:
           cluster-name: haiwu-helloworld-eks
-          node-type: 't2.micro'
-          nodes: 2
-          show-eksctl-command: true
           requires:
             - publish-image       
       - test-cluster:
