@@ -92,6 +92,8 @@ workflows:
             - build
       - aws-eks/create-cluster:
           cluster-name: haiwu-helloworld-eks
+          node-type: t2.micro
+          nodes: 2
           requires:
             - publish-image       
       - test-cluster:
