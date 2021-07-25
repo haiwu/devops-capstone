@@ -112,10 +112,6 @@ workflows:
           cluster-name: haiwu-helloworld-eks
           requires:
             - create-cluster
-      - test-cluster:
-          cluster-name: haiwu-helloworld-eks
-          requires:
-            - create-deployment
       - aws-eks/update-container-image:
           cluster-name: haiwu-helloworld-eks
           container-image-updates: 'nginx-hello-world=nginx-hello-world:latest'
@@ -123,6 +119,10 @@ workflows:
           requires:
             - create-deployment
           resource-name: deployment/haiwu-nginx-hello-world-deployment
+      - test-cluster:
+          cluster-name: haiwu-helloworld-eks
+          requires:
+            - aws-eks/update-container-image         
 #      - aws-eks/delete-cluster:
 #          cluster-name: my-eks-demo
 #          requires:
