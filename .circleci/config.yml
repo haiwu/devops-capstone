@@ -1,33 +1,84 @@
-jobs:
-  test-cluster:
-    executor: aws-eks/python3
-    parameters:
-      cluster-name:
-        description: |
-          Name of the EKS cluster
-        type: string
-    steps:
-      - kubernetes/install
-      - aws-eks/update-kubeconfig-with-authenticator:
-          cluster-name: << parameters.cluster-name >>
-      - run:
-          command: |
-            kubectl get services
-          name: Test cluster
-orbs:
-  aws-eks: circleci/aws-eks@0.2.3
-  kubernetes: circleci/kubernetes@0.4.0
 version: 2.1
+executors:
+  docker-publisher:
+    environment:
+      IMAGE_NAME: haiwu/nginx-hello-world
+    docker:
+      - image: circleci/buildpack-deps:stretch
+jobs:
+  build:
+    executor: docker-publisher
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker image
+          command: |
+            docker build -t $IMAGE_NAME:latest .
+      - run:
+          name: Archive Docker image
+          command: docker save -o image.tar $IMAGE_NAME
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./image.tar
+  publish-image:
+    executor: docker-publisher
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
+      - run:
+          name: Load archived Docker image
+          command: docker load -i /tmp/workspace/image.tar
+      - run:
+          name: Publish Docker Image to Docker Hub
+          command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            IMAGE_TAG="0.0.${CIRCLE_BUILD_NUM}"
+            docker tag $IMAGE_NAME:latest $IMAGE_NAME:$IMAGE_TAG
+            docker push $IMAGE_NAME:latest
+            docker push $IMAGE_NAME:$IMAGE_TAG
 workflows:
-  deployment:
+  version: 2
+  build-master:
     jobs:
-      - aws-eks/create-cluster:
-          cluster-name: my-eks-demo
-      - test-cluster:
-          cluster-name: my-eks-demo
+      - build
+      - publish-image:
           requires:
-            - aws-eks/create-cluster
-      - aws-eks/delete-cluster:
-          cluster-name: my-eks-demo
-          requires:
-            - test-cluster
+            - build
+
+
+#jobs:
+#  test-cluster:
+#    executor: aws-eks/python3
+#    parameters:
+#      cluster-name:
+#        description: |
+#          Name of the EKS cluster
+#        type: string
+#    steps:
+#      - kubernetes/install
+#      - aws-eks/update-kubeconfig-with-authenticator:
+#          cluster-name: << parameters.cluster-name >>
+#      - run:
+#          command: |
+#            kubectl get services
+#          name: Test cluster
+#orbs:
+#  aws-eks: circleci/aws-eks@0.2.3
+#  kubernetes: circleci/kubernetes@0.4.0
+#version: 2.1
+#workflows:
+# deployment:
+#    jobs:
+#      - aws-eks/create-cluster:
+#          cluster-name: my-eks-demo
+#      - test-cluster:
+#          cluster-name: my-eks-demo
+#          requires:
+#            - aws-eks/create-cluster
+#      - aws-eks/delete-cluster:
+#          cluster-name: my-eks-demo
+#          requires:
+#            - test-cluster
