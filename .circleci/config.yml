@@ -88,6 +88,7 @@ jobs:
           install-kubectl: true
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
+          watch-timeout: 15m
           resource-file-path: nginx-deployment.yml
           resource-name: deployment/haiwu-nginx-hello-world-deployment
 workflows:
