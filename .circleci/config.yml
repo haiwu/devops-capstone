@@ -43,6 +43,40 @@ jobs:
             docker tag $IMAGE_NAME:latest $IMAGE_NAME:$IMAGE_TAG
             docker push $IMAGE_NAME:latest
             docker push $IMAGE_NAME:$IMAGE_TAG
+  test-cluster:
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        description: |
+          AWS EKS cluster name
+        type: string
+    steps:
+      - kubernetes/install
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+      - run:
+          name: Test AWS EKS cluster
+          command: |
+            kubectl get services
+            kubectl get pods -l app=hello-world
+            kubectl get deployments --name=haiwu-nginx-hello-world-deployment
+            kubectl set svc -n haiwu-nginx-hello-world-service
+  create-deployment:
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        description: |
+          AWS EKS cluster name
+        type: string
+    steps:
+      - checkout
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+          install-kubectl: true
+      - kubernetes/create-or-update-resource:
+          get-rollout-status: true
+          resource-file-path: nginx-deployment.yml
+          resource-name: deployment/haiwu-nginx-hello-world-deployment
 workflows:
   devops-captone:
     jobs:
@@ -56,36 +90,14 @@ workflows:
       - publish-image:
           requires:
             - build
-#jobs:
-#  test-cluster:
-#    executor: aws-eks/python3
-#    parameters:
-#      cluster-name:
-#        description: |
-#          Name of the EKS cluster
-#        type: string
-#    steps:
-#      - kubernetes/install
-#      - aws-eks/update-kubeconfig-with-authenticator:
-#          cluster-name: << parameters.cluster-name >>
-#      - run:
-#          command: |
-#            kubectl get services
-#          name: Test cluster
-#orbs:
-#  aws-eks: circleci/aws-eks@0.2.3
-#  kubernetes: circleci/kubernetes@0.4.0
-#version: 2.1
-#workflows:
-# deployment:
-#    jobs:
-#      - aws-eks/create-cluster:
-#          cluster-name: my-eks-demo
-#      - test-cluster:
-#          cluster-name: my-eks-demo
-#          requires:
-#            - aws-eks/create-cluster
+      - aws-eks/create-cluster:
+          cluster-name: haiwu-helloworld-eks
+      - test-cluster:
+          cluster-name: haiwu-helloworld-eks
+          requires:
+            - aws-eks/create-cluster
 #      - aws-eks/delete-cluster:
 #          cluster-name: my-eks-demo
 #          requires:
-#            - test-cluster
+#            - test-cluster            
+
