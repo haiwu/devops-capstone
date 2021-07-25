@@ -48,8 +48,7 @@ workflows:
     jobs:
       - docker/hadolint:
           dockerfiles: Dockerfile
-          executor-class: medium
-          ignore-rules: 'DL4005,DL3008'
+          executor-class: small
           trusted-registries: 'docker.io'
       - build:
           requires:
